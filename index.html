@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Iracema Scrollytelling</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f0f0; color: #333; }
+
+        /* Container principal do Scrollytelling */
+        .scrolly-container {
+            display: flex;
+            flex-direction: row-reverse; /* Texto à esquerda, Visual à direita */
+            position: relative;
+        }
+
+        /* Lado Visual (Sticky) */
+        .visual-monitor {
+            position: sticky;
+            top: 0;
+            width: 50%;
+            height: 100vh;
+            overflow: hidden;
+            background: #222;
+        }
+
+        .visual-monitor img, .visual-monitor iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.8s ease;
+            position: absolute;
+        }
+
+        /* Lado do Conteúdo (Scroll) */
+        .content-scroll {
+            width: 50%;
+            padding: 0 10%;
+        }
+
+        .step {
+            height: 100vh; /* Cada "capítulo" ocupa a tela toda */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0.3;
+            transition: opacity 0.5s;
+        }
+
+        /* Efeito de destaque quando o texto passa pelo centro */
+        .step:hover { opacity: 1; }
+
+        h1 { font-size: 3rem; color: #e67e22; margin-bottom: 20px; }
+        p { font-size: 1.2rem; line-height: 1.6; background: rgba(255,255,255,0.8); padding: 20px; border-radius: 8px; }
+
+        /* Classes para trocar as imagens via JS ou CSS dinâmico */
+        #img1 { z-index: 3; }
+        #img2 { z-index: 2; }
+    </style>
+</head>
+<body>
+
+<div class="scrolly-container">
+    <div class="visual-monitor">
+        <img src="https://images.unsplash.com/photo-1590508591873-1085078a6e43?auto=format&fit=crop&w=1000&q=80" id="img1" alt="Estátua de Iracema">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3981.355152377353!2d-38.5173365!3d-3.7214739!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x7c7484643094c9b%3A0xc0051834f37803e3!2sPonte%20dos%20Ingleses!5e0!3m2!1spt-BR!2sbr!4v1700000000000" id="mapa" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+    </div>
+
+    <div class="content-scroll">
+        <section class="step" id="intro">
+            <h1>A Guardiã</h1>
+            <p>A Praia de Iracema não é apenas areia e mar; é o coração boêmio de Fortaleza. Batizada em homenagem à "virgem dos lábios de mel" de José de Alencar.</p>
+        </section>
+
+        <section class="step" id="ponte">
+            <h1>Ponte dos Ingleses</h1>
+            <p>Conhecida popularmente como Ponte Metálica, é o local perfeito para o pôr do sol. Um marco da modernização portuária que hoje abriga casais e fotógrafos.</p>
+        </section>
+
+        <section class="step" id="boemia">
+            <h1>Vida Noturna</h1>
+            <p>Dos casarões históricos ao Centro Dragão do Mar, a cultura respira aqui. O scrollytelling nos permite ver como a cidade evoluiu sem perder sua essência.</p>
+        </section>
+    </div>
+</div>
+
+</body>
+</html>
