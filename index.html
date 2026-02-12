@@ -3,121 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iracema Scrollytelling</title>
+    <title>Iracema Imersiva</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #1a1a1a; color: #fff; }
-
-        .scrolly-container {
-            display: flex;
-            position: relative;
+        :root {
+            --primary: #e67e22;
+            --bg: #0a0a0a;
         }
 
-        /* Lado Visual Fixo */
-        .visual-monitor {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background-color: var(--bg); 
+            color: white; 
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 1. PERSPECTIVA NO PAI: Cria o ambiente 3D */
+        .scrolly-wrapper {
+            perspective: 1000px;
+            height: 400vh; /* Espaço total de scroll */
+        }
+
+        /* Elemento fixo que segura a cena */
+        .scene {
             position: sticky;
             top: 0;
-            width: 50%;
             height: 100vh;
-            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
         }
 
-        .visual-item {
+        /* 2. O CARD (Visual) com Efeito de Escala e Rotação */
+        .visual-card {
             position: absolute;
+            width: 60%;
+            max-width: 800px;
+            height: 450px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            
+            /* Estado Inicial (Escondido e Longe) */
+            opacity: 0;
+            transform: translateZ(-200px) rotateX(10deg);
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+        }
+
+        .visual-card.active {
+            opacity: 1;
+            transform: translateZ(0) rotateX(0deg);
+            pointer-events: auto;
+        }
+
+        .visual-card img {
             width: 100%;
             height: 100%;
-            opacity: 0;
-            transition: opacity 1s ease-in-out;
             object-fit: cover;
         }
 
-        /* Classe que o JS vai ativar */
-        .visual-item.active {
-            opacity: 1;
+        /* Camada de Gradiente sobre a foto */
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            display: flex;
+            align-items: flex-end;
+            padding: 40px;
         }
 
-        /* Lado do Texto */
-        .content-scroll {
-            width: 50%;
-            padding: 0 5%;
+        /* 3. CONTEÚDO DE TEXTO (Scroll) */
+        .text-overlay {
+            position: absolute;
+            width: 100%;
+            pointer-events: none;
         }
 
         .step {
             height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 40px;
-            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            align-items: center;
+            padding-left: 10%;
+            opacity: 0;
+            transition: 0.5s;
         }
 
-        .step h1 { font-size: 3.5rem; margin-bottom: 20px; color: #f1c40f; }
-        .step p { font-size: 1.4rem; line-height: 1.6; color: #ddd; max-width: 500px; }
+        .step-content {
+            max-width: 400px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-left: 4px solid var(--primary);
+            pointer-events: all;
+        }
 
-        /* Ajuste para o Iframe do Mapa */
-        iframe.visual-item { border: none; filter: grayscale(0.5) invert(0.9); }
+        .step-content h2 { color: var(--primary); margin-bottom: 15px; font-size: 2rem; }
     </style>
 </head>
 <body>
 
-<div class="scrolly-container">
-    <div class="visual-monitor">
-        <img src="https://images.unsplash.com/photo-1590508591873-1085078a6e43?auto=format&fit=crop&w=1000&q=80" 
-             class="visual-item active" data-step="intro">
-        
-        <iframe class="visual-item" data-step="ponte"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3981.365313175865!2d-38.5173163!3d-3.7181636!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x7c748466b04b901%3A0x600b467c69996d93!2sPonte%20dos%20Ingleses!5e0!3m2!1spt-BR!2sbr!4v1700000000000">
-        </iframe>
+<div class="scrolly-wrapper">
+    <div class="scene">
+        <div class="visual-card active" data-id="historia">
+            <img src="https://images.unsplash.com/photo-1590508591873-1085078a6e43?auto=format&fit=crop&w=1200" alt="Estátua de Iracema">
+            <div class="overlay"><h3>A Lenda de Alencar</h3></div>
+        </div>
 
-        <img src="https://images.unsplash.com/photo-1516301138275-f37089196b04?auto=format&fit=crop&w=1000&q=80" 
-             class="visual-item" data-step="boemia">
+        <div class="visual-card" data-id="atracoes">
+            <img src="https://images.unsplash.com/photo-1516301138275-f37089196b04?auto=format&fit=crop&w=1200" alt="Ponte dos Ingleses">
+            <div class="overlay"><h3>Pôr do Sol na Ponte</h3></div>
+        </div>
+
+        <div class="visual-card" data-id="valorizacao">
+            <img src="https://images.unsplash.com/photo-1496560230581-996162e3c90a?auto=format&fit=crop&w=1200" alt="Dragão do Mar">
+            <div class="overlay"><h3>Cultura e Boemia</h3></div>
+        </div>
     </div>
 
-    <div class="content-scroll">
-        <section class="step" id="intro">
-            <h1>Iracema</h1>
-            <p>Onde o mito encontra o mar. A estátua da Iracema Guardiã observa o horizonte, simbolizando a força da cultura cearense.</p>
+    <div class="text-overlay">
+        <section class="step" id="historia">
+            <div class="step-content">
+                <h2>História</h2>
+                <p>A Praia de Iracema carrega o nome da personagem de José de Alencar, símbolo da resistência e identidade do Ceará.</p>
+            </div>
         </section>
 
-        <section class="step" id="ponte">
-            <h1>A Ponte</h1>
-            <p>A Ponte dos Ingleses foi porta de entrada para o progresso. Hoje, o mapa mostra sua localização privilegiada no bairro mais charmoso de Fortaleza.</p>
+        <section class="step" id="atracoes">
+            <div class="step-content">
+                <h2>Atrações</h2>
+                <p>Da Ponte dos Ingleses ao Estoril, cada passo revela um marco arquitetônico que resiste ao tempo.</p>
+            </div>
         </section>
 
-        <section class="step" id="boemia">
-            <h1>Noite</h1>
-            <p>Quando o sol se põe, as luzes do Dragão do Mar se acendem. A boemia toma conta das ruas históricas com cores e ritmos únicos.</p>
+        <section class="step" id="valorizacao">
+            <div class="step-content">
+                <h2>Valorização</h2>
+                <p>Mais que turismo, é um patrimônio vivo. O Dragão do Mar e os novos calçadões revitalizam o orgulho de ser fortalezense.</p>
+            </div>
         </section>
     </div>
 </div>
 
 <script>
-    // Selecionamos todos os passos de texto e todas as imagens/mapas
-    const steps = document.querySelectorAll('.step');
-    const visuals = document.querySelectorAll('.visual-item');
-
-    // Opções do observador: dispara quando 60% do elemento está na tela
-    const options = {
-        threshold: 0.6
+    const observerOptions = {
+        threshold: 0.5
     };
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                const stepId = entry.target.id;
+                // Ativar o card visual correspondente
+                const id = entry.target.id;
+                
+                document.querySelectorAll('.visual-card').forEach(card => {
+                    card.classList.remove('active');
+                    if (card.dataset.id === id) {
+                        card.classList.add('active');
+                    }
+                });
 
-                // Remove a classe 'active' de todos os visuais
-                visuals.forEach(visual => visual.classList.remove('active'));
-
-                // Adiciona 'active' apenas ao visual que corresponde ao ID do texto
-                const activeVisual = document.querySelector(`.visual-item[data-step="${stepId}"]`);
-                if (activeVisual) activeVisual.classList.add('active');
+                // Efeito de fade no texto
+                entry.target.style.opacity = "1";
+            } else {
+                entry.target.style.opacity = "0";
             }
         });
-    }, options);
+    }, observerOptions);
 
-    // Começa a observar cada seção de texto
-    steps.forEach(step => observer.observe(step));
+    document.querySelectorAll('.step').forEach(step => observer.observe(step));
 </script>
 
 </body>
