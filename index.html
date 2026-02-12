@@ -3,178 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iracema Imersiva</title>
+    <title>Iracema: A História Viva</title>
     <style>
+        /* --- CONFIGURAÇÕES GERAIS --- */
         :root {
-            --primary: #e67e22;
-            --bg: #0a0a0a;
+            --primary: #ff6b6b; /* Cor do Pôr do Sol */
+            --bg: #0e0e0e;
+            --text: #f0f0f0;
+            --card-width: 600px;
+            --card-height: 400px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
             background-color: var(--bg); 
-            color: white; 
-            font-family: 'Inter', sans-serif;
+            color: var(--text); 
+            font-family: 'Helvetica Neue', sans-serif;
             overflow-x: hidden;
         }
 
-        /* 1. PERSPECTIVA NO PAI: Cria o ambiente 3D */
+        /* --- CONTAINER PRINCIPAL (CENA 3D) --- */
         .scrolly-wrapper {
-            perspective: 1000px;
-            height: 400vh; /* Espaço total de scroll */
+            position: relative;
+            /* Isso cria o ambiente 3D para os filhos */
+            perspective: 1500px; 
         }
 
-        /* Elemento fixo que segura a cena */
-        .scene {
+        /* O PALCO FIXO (ONDE AS IMAGENS FICAM) */
+        .sticky-stage {
             position: sticky;
             top: 0;
             height: 100vh;
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transform-style: preserve-3d;
-        }
-
-        /* 2. O CARD (Visual) com Efeito de Escala e Rotação */
-        .visual-card {
-            position: absolute;
-            width: 60%;
-            max-width: 800px;
-            height: 450px;
-            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            
-            /* Estado Inicial (Escondido e Longe) */
-            opacity: 0;
-            transform: translateZ(-200px) rotateX(10deg);
-            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-            pointer-events: none;
+            /* Permite que elementos 3D não sejam "achatados" */
+            transform-style: preserve-3d; 
         }
 
-        .visual-card.active {
+        /* --- OS CARDS (IMAGENS) --- */
+        .card-container {
+            position: absolute;
+            width: var(--card-width);
+            height: var(--card-height);
+            /* Transição suave para transformações */
+            transition: opacity 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                        transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+            opacity: 0;
+            /* Começa "longe" e girado */
+            transform: translateZ(-200px) rotateX(20deg);
+            will-change: transform, opacity;
+        }
+
+        /* Estado ATIVO (Visível) */
+        .card-container.active {
             opacity: 1;
             transform: translateZ(0) rotateX(0deg);
-            pointer-events: auto;
+            z-index: 10;
         }
 
-        .visual-card img {
+        /* Estado SAÍDA (Vai embora para cima) */
+        .card-container.exit {
+            opacity: 0;
+            transform: translateY(-100px) translateZ(-100px);
+            z-index: 5;
+        }
+
+        .card-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        /* Camada de Gradiente sobre a foto */
-        .overlay {
+        /* Overlay de Texto dentro da Imagem (Estilo KPR) */
+        .card-overlay {
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 50%;
-            background: linear-gradient(transparent, rgba(0,0,0,0.8));
-            display: flex;
-            align-items: flex-end;
-            padding: 40px;
+            bottom: 20px;
+            left: -20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            max-width: 300px;
         }
 
-        /* 3. CONTEÚDO DE TEXTO (Scroll) */
-        .text-overlay {
-            position: absolute;
-            width: 100%;
-            pointer-events: none;
+        .card-overlay h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        /* --- TEXTO QUE ROLA (GATILHOS INVISÍVEIS) --- */
+        .scroll-content {
+            position: relative;
+            z-index: 20; /* Fica acima visualmente, mas transparente */
+            margin-top: -100vh; /* Puxa para começar junto com o sticky */
         }
 
         .step {
-            height: 100vh;
+            height: 100vh; /* Cada passo dura 1 tela inteira de scroll */
             display: flex;
             align-items: center;
-            padding-left: 10%;
-            opacity: 0;
-            transition: 0.5s;
+            justify-content: flex-end; /* Texto à direita */
+            padding-right: 10%;
+            pointer-events: none; /* Deixa clicar através do texto */
         }
 
-        .step-content {
+        /* Caixa de texto flutuante */
+        .step-text {
+            background: rgba(0, 0, 0, 0.8);
+            border-left: 3px solid var(--primary);
+            padding: 40px;
             max-width: 400px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-left: 4px solid var(--primary);
-            pointer-events: all;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.6s ease;
         }
 
-        .step-content h2 { color: var(--primary); margin-bottom: 15px; font-size: 2rem; }
+        .step.active .step-text {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        h2 { font-size: 3rem; margin-bottom: 20px; line-height: 1; }
+        p { font-size: 1.1rem; line-height: 1.6; color: #ccc; }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            :root { --card-width: 90%; --card-height: 300px; }
+            .step { justify-content: center; padding: 0 20px; align-items: flex-end; padding-bottom: 50px; }
+            .step-text { max-width: 100%; background: rgba(0,0,0,0.9); }
+            .card-overlay { display: none; } /* Simplifica no mobile */
+        }
     </style>
 </head>
 <body>
 
 <div class="scrolly-wrapper">
-    <div class="scene">
-        <div class="visual-card active" data-id="historia">
-            <img src="https://images.unsplash.com/photo-1590508591873-1085078a6e43?auto=format&fit=crop&w=1200" alt="Estátua de Iracema">
-            <div class="overlay"><h3>A Lenda de Alencar</h3></div>
+    
+    <div class="sticky-stage">
+        
+        <div class="card-container" id="card-1">
+            <img src="https://images.unsplash.com/photo-1590508591873-1085078a6e43?q=80&w=1600&auto=format&fit=crop" class="card-image" alt="Estátua de Iracema">
+            <div class="card-overlay">
+                <h3>01 // Origem</h3>
+                <p>A virgem dos lábios de mel que vigia o oceano.</p>
+            </div>
         </div>
 
-        <div class="visual-card" data-id="atracoes">
-            <img src="https://images.unsplash.com/photo-1516301138275-f37089196b04?auto=format&fit=crop&w=1200" alt="Ponte dos Ingleses">
-            <div class="overlay"><h3>Pôr do Sol na Ponte</h3></div>
+        <div class="card-container" id="card-2">
+            <img src="https://images.unsplash.com/photo-1621255530773-6771d999079a?q=80&w=1600&auto=format&fit=crop" class="card-image" alt="Ponte dos Ingleses">
+            <div class="card-overlay">
+                <h3>02 // A Ponte</h3>
+                <p>Um adeus ao sol sob a estrutura metálica.</p>
+            </div>
         </div>
 
-        <div class="visual-card" data-id="valorizacao">
-            <img src="https://images.unsplash.com/photo-1496560230581-996162e3c90a?auto=format&fit=crop&w=1200" alt="Dragão do Mar">
-            <div class="overlay"><h3>Cultura e Boemia</h3></div>
+        <div class="card-container" id="card-3">
+            <img src="https://images.unsplash.com/photo-1563297125-9a489c4eb048?q=80&w=1600&auto=format&fit=crop" class="card-image" alt="Vida Noturna">
+            <div class="card-overlay">
+                <h3>03 // Futuro</h3>
+                <p>Onde a cultura e a inovação se encontram.</p>
+            </div>
         </div>
+
     </div>
 
-    <div class="text-overlay">
-        <section class="step" id="historia">
-            <div class="step-content">
-                <h2>História</h2>
-                <p>A Praia de Iracema carrega o nome da personagem de José de Alencar, símbolo da resistência e identidade do Ceará.</p>
+    <div class="scroll-content">
+        <div class="step" data-target="card-1">
+            <div class="step-text">
+                <h2>A Lenda</h2>
+                <p>A Praia de Iracema é o coração pulsante de Fortaleza. Onde a história de José de Alencar encontra a brisa do mar, criando uma identidade única que resiste ao tempo.</p>
             </div>
-        </section>
+        </div>
 
-        <section class="step" id="atracoes">
-            <div class="step-content">
-                <h2>Atrações</h2>
-                <p>Da Ponte dos Ingleses ao Estoril, cada passo revela um marco arquitetônico que resiste ao tempo.</p>
+        <div class="step" data-target="card-2">
+            <div class="step-text">
+                <h2>A Ponte</h2>
+                <p>Conhecida como Ponte dos Ingleses, este marco histórico não é apenas ferro e madeira. É o palco do pôr do sol mais bonito do Ceará e símbolo da nossa conexão com o mundo.</p>
             </div>
-        </section>
+        </div>
 
-        <section class="step" id="valorizacao">
-            <div class="step-content">
-                <h2>Valorização</h2>
-                <p>Mais que turismo, é um patrimônio vivo. O Dragão do Mar e os novos calçadões revitalizam o orgulho de ser fortalezense.</p>
+        <div class="step" data-target="card-3">
+            <div class="step-text">
+                <h2>O Novo</h2>
+                <p>A requalificação da orla traz modernidade sem perder a essência boêmia. Do Dragão do Mar aos novos calçadões, a PI se reafirma como o centro criativo da cidade.</p>
             </div>
-        </section>
+        </div>
+        
+        <div class="step">
+            </div>
     </div>
+
 </div>
 
 <script>
-    const observerOptions = {
-        threshold: 0.5
-    };
+    /* --- LÓGICA DE INTERSECTION OBSERVER (Troca de Slides) --- */
+    const steps = document.querySelectorAll('.step');
+    const cards = document.querySelectorAll('.card-container');
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // Ativar o card visual correspondente
-                const id = entry.target.id;
-                
-                document.querySelectorAll('.visual-card').forEach(card => {
-                    card.classList.remove('active');
-                    if (card.dataset.id === id) {
+                const targetId = entry.target.dataset.target;
+                if (!targetId) return;
+
+                // Gerencia classes Active/Exit
+                cards.forEach(card => {
+                    if (card.id === targetId) {
+                        card.classList.remove('exit');
                         card.classList.add('active');
+                    } else {
+                        card.classList.remove('active');
+                        // Se o card já passou, adiciona 'exit' para animar saída
+                        // Simplificação: remove active de todos, lógica fina de exit depende da direção
                     }
                 });
 
-                // Efeito de fade no texto
-                entry.target.style.opacity = "1";
-            } else {
-                entry.target.style.opacity = "0";
+                // Ativa o texto
+                document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                entry.target.classList.add('active');
             }
         });
-    }, observerOptions);
+    }, { threshold: 0.5 }); // Dispara quando 50% do texto está visível
 
-    document.querySelectorAll('.step').forEach(step => observer.observe(step));
+    steps.forEach(step => observer.observe(step));
+
+
+    /* --- LÓGICA DE TILT 3D (Efeito de Inércia no Scroll) --- */
+    let lastScrollY = window.scrollY;
+    let currentTilt = 0;
+
+    function animateTilt() {
+        const currentScrollY = window.scrollY;
+        
+        // Calcula a velocidade do scroll (diferença entre pos atual e anterior)
+        const velocity = currentScrollY - lastScrollY;
+        
+        // Suavização (Lerp simples)
+        // Se scrollar rápido para baixo, velocity é positivo -> inclina para frente
+        const targetTilt = Math.min(Math.max(velocity * 0.1, -10), 10); // Limita entre -10 e 10 graus
+        
+        // Aproxima o valor atual do valor alvo (efeito de mola suave)
+        currentTilt += (targetTilt - currentTilt) * 0.1;
+
+        // Aplica a rotação apenas no card ATIVO
+        const activeCard = document.querySelector('.card-container.active');
+        if (activeCard) {
+            // Mantém o translateZ(0) e adiciona a rotação dinâmica
+            activeCard.style.transform = `translateZ(0) rotateX(${currentTilt}deg)`;
+        }
+
+        lastScrollY = currentScrollY;
+        requestAnimationFrame(animateTilt);
+    }
+
+    animateTilt();
+
 </script>
 
 </body>
