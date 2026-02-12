@@ -2,87 +2,123 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iracema Scrollytelling</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f0f0; color: #333; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #1a1a1a; color: #fff; }
 
-        /* Container principal do Scrollytelling */
         .scrolly-container {
             display: flex;
-            flex-direction: row-reverse; /* Texto à esquerda, Visual à direita */
             position: relative;
         }
 
-        /* Lado Visual (Sticky) */
+        /* Lado Visual Fixo */
         .visual-monitor {
             position: sticky;
             top: 0;
             width: 50%;
             height: 100vh;
-            overflow: hidden;
-            background: #222;
+            background: #000;
         }
 
-        .visual-monitor img, .visual-monitor iframe {
+        .visual-item {
+            position: absolute;
             width: 100%;
             height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
             object-fit: cover;
-            transition: opacity 0.8s ease;
-            position: absolute;
         }
 
-        /* Lado do Conteúdo (Scroll) */
+        /* Classe que o JS vai ativar */
+        .visual-item.active {
+            opacity: 1;
+        }
+
+        /* Lado do Texto */
         .content-scroll {
             width: 50%;
-            padding: 0 10%;
+            padding: 0 5%;
         }
 
         .step {
-            height: 100vh; /* Cada "capítulo" ocupa a tela toda */
+            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            opacity: 0.3;
-            transition: opacity 0.5s;
+            padding: 40px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Efeito de destaque quando o texto passa pelo centro */
-        .step:hover { opacity: 1; }
+        .step h1 { font-size: 3.5rem; margin-bottom: 20px; color: #f1c40f; }
+        .step p { font-size: 1.4rem; line-height: 1.6; color: #ddd; max-width: 500px; }
 
-        h1 { font-size: 3rem; color: #e67e22; margin-bottom: 20px; }
-        p { font-size: 1.2rem; line-height: 1.6; background: rgba(255,255,255,0.8); padding: 20px; border-radius: 8px; }
-
-        /* Classes para trocar as imagens via JS ou CSS dinâmico */
-        #img1 { z-index: 3; }
-        #img2 { z-index: 2; }
+        /* Ajuste para o Iframe do Mapa */
+        iframe.visual-item { border: none; filter: grayscale(0.5) invert(0.9); }
     </style>
 </head>
 <body>
 
 <div class="scrolly-container">
     <div class="visual-monitor">
-        <img src="https://images.unsplash.com/photo-1590508591873-1085078a6e43?auto=format&fit=crop&w=1000&q=80" id="img1" alt="Estátua de Iracema">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3981.355152377353!2d-38.5173365!3d-3.7214739!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x7c7484643094c9b%3A0xc0051834f37803e3!2sPonte%20dos%20Ingleses!5e0!3m2!1spt-BR!2sbr!4v1700000000000" id="mapa" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        <img src="https://images.unsplash.com/photo-1590508591873-1085078a6e43?auto=format&fit=crop&w=1000&q=80" 
+             class="visual-item active" data-step="intro">
+        
+        <iframe class="visual-item" data-step="ponte"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3981.365313175865!2d-38.5173163!3d-3.7181636!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x7c748466b04b901%3A0x600b467c69996d93!2sPonte%20dos%20Ingleses!5e0!3m2!1spt-BR!2sbr!4v1700000000000">
+        </iframe>
+
+        <img src="https://images.unsplash.com/photo-1516301138275-f37089196b04?auto=format&fit=crop&w=1000&q=80" 
+             class="visual-item" data-step="boemia">
     </div>
 
     <div class="content-scroll">
         <section class="step" id="intro">
-            <h1>A Guardiã</h1>
-            <p>A Praia de Iracema não é apenas areia e mar; é o coração boêmio de Fortaleza. Batizada em homenagem à "virgem dos lábios de mel" de José de Alencar.</p>
+            <h1>Iracema</h1>
+            <p>Onde o mito encontra o mar. A estátua da Iracema Guardiã observa o horizonte, simbolizando a força da cultura cearense.</p>
         </section>
 
         <section class="step" id="ponte">
-            <h1>Ponte dos Ingleses</h1>
-            <p>Conhecida popularmente como Ponte Metálica, é o local perfeito para o pôr do sol. Um marco da modernização portuária que hoje abriga casais e fotógrafos.</p>
+            <h1>A Ponte</h1>
+            <p>A Ponte dos Ingleses foi porta de entrada para o progresso. Hoje, o mapa mostra sua localização privilegiada no bairro mais charmoso de Fortaleza.</p>
         </section>
 
         <section class="step" id="boemia">
-            <h1>Vida Noturna</h1>
-            <p>Dos casarões históricos ao Centro Dragão do Mar, a cultura respira aqui. O scrollytelling nos permite ver como a cidade evoluiu sem perder sua essência.</p>
+            <h1>Noite</h1>
+            <p>Quando o sol se põe, as luzes do Dragão do Mar se acendem. A boemia toma conta das ruas históricas com cores e ritmos únicos.</p>
         </section>
     </div>
 </div>
+
+<script>
+    // Selecionamos todos os passos de texto e todas as imagens/mapas
+    const steps = document.querySelectorAll('.step');
+    const visuals = document.querySelectorAll('.visual-item');
+
+    // Opções do observador: dispara quando 60% do elemento está na tela
+    const options = {
+        threshold: 0.6
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const stepId = entry.target.id;
+
+                // Remove a classe 'active' de todos os visuais
+                visuals.forEach(visual => visual.classList.remove('active'));
+
+                // Adiciona 'active' apenas ao visual que corresponde ao ID do texto
+                const activeVisual = document.querySelector(`.visual-item[data-step="${stepId}"]`);
+                if (activeVisual) activeVisual.classList.add('active');
+            }
+        });
+    }, options);
+
+    // Começa a observar cada seção de texto
+    steps.forEach(step => observer.observe(step));
+</script>
 
 </body>
 </html>
