@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extreme Scroll Laboratory</title>
+
+<style>
+:root{--scroll:0}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:#000;
+  color:#fff;
+  overflow-x:hidden;
+}
+
+/* ---------- HTML OVERLAY LAYERS ---------- */
+
+.overlay{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:10vw;
+}
+
+.overlay h1{
+  font-size:clamp(2.5rem,6vw,5rem);
+  letter-spacing:-0.04em;
+}
+
+.overlay p{
+  max-width:600px;
+  margin-top:30px;
+  opacity:.7;
+  line-height:1.7;
+}
+
+/* Chapters visibility controlled via JS */
+.chapter{
+  opacity:0;
+  transition:opacity .6s ease;
+}
+
+.chapter.active{
+  opacity:1;
+}
+
+/* scroll area */
+.scroll-area{
+  height:800vh;
+}
+</style>
+</head>
+<body>
+
+<div class="scroll-area"></div>
+
+<div class="overlay chapter" id="c0">
+  <div>
+    <h1>Scroll Is Depth</h1>
+    <p>Você não está rolando uma página. Está atravessando espaço.</p>
+  </div>
+</div>
+
+<div class="overlay chapter" id="c1">
+  <div>
+    <h1>Proximidade</h1>
+    <p>O objeto deixa de ser superfície e vira ambiente.</p>
+  </div>
+</div>
+
+<div class="overlay chapter" id="c2">
+  <div>
+    <h1>Imersão</h1>
+    <p>Granulação, distorção, frequência espacial.</p>
+  </div>
+</div>
+
+<div class="overlay chapter" id="c3">
+  <div>
+    <h1>Arquitetura</h1>
+    <p>Continuidade volumétrica entre ambientes.</p>
+  </div>
+</div>
+
+<canvas id="webgl"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+
+<script>
+
+/* --------------------------------------------------
+   SCROLL TIMELINE COM INÉRCIA FÍSICA
+---------------------------------------------------*/
+
+let targetScroll=0
+let currentScroll=0
+let maxScroll=document.body.scrollHeight-window.innerHeight
+
+window.addEventListener("scroll",()=>{
+  targetScroll=window.scrollY/maxScroll
+})
+
+function updateScrollPhysics(){
+  currentScroll += (targetScroll-currentScroll)*0.08
+  document.documentElement.style.setProperty("--scroll",currentScroll)
+}
+
+/* --------------------------------------------------
+   THREE SETUP
+---------------------------------------------------*/
+
+const canvas=document.getElementById("webgl")
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true})
+renderer.setSize(window.innerWidth,window.innerHeight)
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio))
+
+const scene=new THREE.Scene()
+
+const camera=new THREE.PerspectiveCamera(
+  60,
+  window.innerWidth/window.innerHeight,
+  0.1,
+  100
+)
+camera.position.z=5
+
+/* --------------------------------------------------
+   LIGHT
+---------------------------------------------------*/
+
+const light=new THREE.PointLight(0xffffff,2,20)
+light.position.set(0,2,3)
+scene.add(light)
+
+/* --------------------------------------------------
+   CHAPTER OBJECTS IN DEPTH (Z SPACE)
+---------------------------------------------------*/
+
+const chapters=[]
+const spacing= -8
+
+function createChapterObject(color,z){
+  const geo=new THREE.SphereGeometry(1.5,64,64)
+  const mat=new THREE.MeshStandardMaterial({
+    color,
+    roughness:.3,
+    metalness:.2
+  })
+  const mesh=new THREE.Mesh(geo,mat)
+  mesh.position.z=z
+  scene.add(mesh)
+  return mesh
+}
+
+chapters.push(createChapterObject(0x222244,0))
+chapters.push(createChapterObject(0x442222,spacing))
+chapters.push(createChapterObject(0x224422,spacing*2))
+chapters.push(createChapterObject(0x444444,spacing*3))
+
+/* --------------------------------------------------
+   VOLUMETRIC BACKGROUND PLANE
+---------------------------------------------------*/
+
+const bgGeo=new THREE.PlaneGeometry(50,50)
+const bgMat=new THREE.ShaderMaterial({
+  uniforms:{
+    u_time:{value:0},
+    u_progress:{value:0}
+  },
+  vertexShader:`
+    varying vec2 vUv;
+    void main(){
+      vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+    }
+  `,
+  fragmentShader:`
+    uniform float u_time;
+    uniform float u_progress;
+    varying vec2 vUv;
+
+    float noise(vec2 p){
+      return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);
+    }
+
+    void main(){
+      float n=noise(vUv*500.0+u_time)*0.1*u_progress;
+      gl_FragColor=vec4(vec3(n),0.4*u_progress);
+    }
+  `,
+  transparent:true
+})
+const bg=new THREE.Mesh(bgGeo,bgMat)
+bg.position.z=-30
+scene.add(bg)
+
+/* --------------------------------------------------
+   ANIMATION LOOP
+---------------------------------------------------*/
+
+function animate(){
+  requestAnimationFrame(animate)
+
+  updateScrollPhysics()
+
+  const depthProgress=currentScroll* (chapters.length-1)
+
+  camera.position.z = 5 + depthProgress*spacing
+
+  chapters.forEach((mesh,i)=>{
+    mesh.rotation.y += 0.01
+    mesh.rotation.x += 0.005
+  })
+
+  bgMat.uniforms.u_time.value+=0.02
+  bgMat.uniforms.u_progress.value=currentScroll
+
+  updateChaptersVisibility()
+
+  renderer.render(scene,camera)
+}
+
+animate()
+
+/* --------------------------------------------------
+   HTML CHAPTER SYNC
+---------------------------------------------------*/
+
+const htmlChapters=document.querySelectorAll(".chapter")
+
+function updateChaptersVisibility(){
+  const index=Math.round(currentScroll*(htmlChapters.length-1))
+  htmlChapters.forEach((el,i)=>{
+    el.classList.toggle("active",i===index)
+  })
+}
+
+/* --------------------------------------------------
+   RESIZE
+---------------------------------------------------*/
+
+window.addEventListener("resize",()=>{
+  renderer.setSize(window.innerWidth,window.innerHeight)
+  camera.aspect=window.innerWidth/window.innerHeight
+  camera.updateProjectionMatrix()
+})
+
+</script>
+</body>
+</html>
