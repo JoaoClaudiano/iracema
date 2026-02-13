@@ -1,273 +1,267 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iracema: A História Viva</title>
-    <style>
-        /* --- CONFIGURAÇÕES GERAIS --- */
-        :root {
-            --primary: #ff6b6b; /* Cor do Pôr do Sol */
-            --bg: #0e0e0e;
-            --text: #f0f0f0;
-            --card-width: 600px;
-            --card-height: 400px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Immersive Scroll Storytelling</title>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            background-color: var(--bg); 
-            color: var(--text); 
-            font-family: 'Helvetica Neue', sans-serif;
-            overflow-x: hidden;
-        }
+<style>
+:root{
+  --progress:0;
+}
 
-        /* --- CONTAINER PRINCIPAL (CENA 3D) --- */
-        .scrolly-wrapper {
-            position: relative;
-            /* Isso cria o ambiente 3D para os filhos */
-            perspective: 1500px; 
-        }
+*{margin:0;padding:0;box-sizing:border-box}
 
-        /* O PALCO FIXO (ONDE AS IMAGENS FICAM) */
-        .sticky-stage {
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            /* Permite que elementos 3D não sejam "achatados" */
-            transform-style: preserve-3d; 
-        }
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  background:#0b0c10;
+  color:white;
+  overflow-x:hidden;
+  scroll-behavior:smooth;
+}
 
-        /* --- OS CARDS (IMAGENS) --- */
-        .card-container {
-            position: absolute;
-            width: var(--card-width);
-            height: var(--card-height);
-            /* Transição suave para transformações */
-            transition: opacity 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), 
-                        transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
-            opacity: 0;
-            /* Começa "longe" e girado */
-            transform: translateZ(-200px) rotateX(20deg);
-            will-change: transform, opacity;
-        }
+/* ---------- STRUCTURE ---------- */
 
-        /* Estado ATIVO (Visível) */
-        .card-container.active {
-            opacity: 1;
-            transform: translateZ(0) rotateX(0deg);
-            z-index: 10;
-        }
+section{
+  min-height:200vh;
+  padding:12vw;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  position:relative;
+}
 
-        /* Estado SAÍDA (Vai embora para cima) */
-        .card-container.exit {
-            opacity: 0;
-            transform: translateY(-100px) translateZ(-100px);
-            z-index: 5;
-        }
+.hero{
+  min-height:120vh;
+  background:radial-gradient(circle at center,#1c1d25 0%,#0b0c10 70%);
+  text-align:center;
+}
 
-        .card-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
+.hero h1{
+  font-size:clamp(2.5rem,6vw,5rem);
+  letter-spacing:-0.03em;
+  opacity:.85;
+}
 
-        /* Overlay de Texto dentro da Imagem (Estilo KPR) */
-        .card-overlay {
-            position: absolute;
-            bottom: 20px;
-            left: -20px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 15px 25px;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            max-width: 300px;
-        }
+/* ---------- PARALLAX ---------- */
 
-        .card-overlay h3 {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
+.parallax-layer{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+  transform:translateY(calc(var(--progress) * -50px));
+  opacity:.25;
+  pointer-events:none;
+}
 
-        /* --- TEXTO QUE ROLA (GATILHOS INVISÍVEIS) --- */
-        .scroll-content {
-            position: relative;
-            z-index: 20; /* Fica acima visualmente, mas transparente */
-            margin-top: -100vh; /* Puxa para começar junto com o sticky */
-        }
+/* ---------- CARD ---------- */
 
-        .step {
-            height: 100vh; /* Cada passo dura 1 tela inteira de scroll */
-            display: flex;
-            align-items: center;
-            justify-content: flex-end; /* Texto à direita */
-            padding-right: 10%;
-            pointer-events: none; /* Deixa clicar através do texto */
-        }
+.card{
+  width:min(90vw,480px);
+  aspect-ratio:3/4;
+  border-radius:28px;
+  overflow:hidden;
+  transform:scale(calc(1 + var(--progress) * .3))
+            rotateX(calc(var(--progress) * 8deg));
+  transition:transform .1s linear;
+  box-shadow:0 40px 120px rgba(0,0,0,.7);
+}
 
-        /* Caixa de texto flutuante */
-        .step-text {
-            background: rgba(0, 0, 0, 0.8);
-            border-left: 3px solid var(--primary);
-            padding: 40px;
-            max-width: 400px;
-            opacity: 0;
-            transform: translateX(50px);
-            transition: all 0.6s ease;
-        }
+.card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 
-        .step.active .step-text {
-            opacity: 1;
-            transform: translateX(0);
-        }
+.zoom-layer{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+  transform:scale(calc(1 + var(--progress) * 1.8));
+  opacity:calc(var(--progress));
+}
 
-        h2 { font-size: 3rem; margin-bottom: 20px; line-height: 1; }
-        p { font-size: 1.1rem; line-height: 1.6; color: #ccc; }
+/* ---------- TEXT BLOCK ---------- */
 
-        /* Responsividade */
-        @media (max-width: 768px) {
-            :root { --card-width: 90%; --card-height: 300px; }
-            .step { justify-content: center; padding: 0 20px; align-items: flex-end; padding-bottom: 50px; }
-            .step-text { max-width: 100%; background: rgba(0,0,0,0.9); }
-            .card-overlay { display: none; } /* Simplifica no mobile */
-        }
-    </style>
+.text-block{
+  max-width:650px;
+  margin-top:40px;
+  line-height:1.7;
+  opacity:.75;
+}
+
+/* ---------- STORY SECTIONS ---------- */
+
+.story-dark{
+  background:radial-gradient(circle at center,#111 0%,#000 90%);
+}
+
+.story-light{
+  background:#f5f5f5;
+  color:#111;
+}
+
+/* ---------- CANVAS ---------- */
+
+canvas{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+}
+
+/* ---------- MOBILE ---------- */
+
+@media(max-width:768px){
+  section{padding:10vw}
+}
+</style>
 </head>
 <body>
 
-<div class="scrolly-wrapper">
-    
-    <div class="sticky-stage">
-        
-        <div class="card-container" id="card-1">
-            <img src="https://images.unsplash.com/photo-1590508591873-1085078a6e43?q=80&w=1600&auto=format&fit=crop" class="card-image" alt="Estátua de Iracema">
-            <div class="card-overlay">
-                <h3>01 // Origem</h3>
-                <p>A virgem dos lábios de mel que vigia o oceano.</p>
-            </div>
-        </div>
+<canvas id="webgl"></canvas>
 
-        <div class="card-container" id="card-2">
-            <img src="https://images.unsplash.com/photo-1621255530773-6771d999079a?q=80&w=1600&auto=format&fit=crop" class="card-image" alt="Ponte dos Ingleses">
-            <div class="card-overlay">
-                <h3>02 // A Ponte</h3>
-                <p>Um adeus ao sol sob a estrutura metálica.</p>
-            </div>
-        </div>
+<!-- HERO -->
+<section class="hero">
+  <h1>Uma Experiência de Scroll Cinematográfica</h1>
+</section>
 
-        <div class="card-container" id="card-3">
-            <img src="https://images.unsplash.com/photo-1563297125-9a489c4eb048?q=80&w=1600&auto=format&fit=crop" class="card-image" alt="Vida Noturna">
-            <div class="card-overlay">
-                <h3>03 // Futuro</h3>
-                <p>Onde a cultura e a inovação se encontram.</p>
-            </div>
-        </div>
+<!-- INTRO -->
+<section>
+  <div class="parallax-layer" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1400');"></div>
+  <h2>Scroll é Narrativa</h2>
+  <div class="text-block">
+    Cada gesto vertical é uma transição espacial. Não navegamos páginas,
+    atravessamos ambientes.
+  </div>
+</section>
 
-    </div>
+<!-- GATO -->
+<section class="story-dark">
+  <div class="card">
+    <img src="https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1000">
+    <div class="zoom-layer" style="background-image:url('https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1000');"></div>
+  </div>
+  <div class="text-block">
+    Aproximar-se é mudar o contexto. A superfície deixa de ser objeto.
+    Torna-se ambiente.
+  </div>
+</section>
 
-    <div class="scroll-content">
-        <div class="step" data-target="card-1">
-            <div class="step-text">
-                <h2>A Lenda</h2>
-                <p>A Praia de Iracema é o coração pulsante de Fortaleza. Onde a história de José de Alencar encontra a brisa do mar, criando uma identidade única que resiste ao tempo.</p>
-            </div>
-        </div>
+<!-- TRANSIÇÃO SENSORIAL -->
+<section>
+  <h2>Dentro do Olhar</h2>
+  <div class="text-block">
+    Textura. Granulação. Frequência.
+    A imagem deixa de ser fotografia e se transforma em atmosfera.
+  </div>
+</section>
 
-        <div class="step" data-target="card-2">
-            <div class="step-text">
-                <h2>A Ponte</h2>
-                <p>Conhecida como Ponte dos Ingleses, este marco histórico não é apenas ferro e madeira. É o palco do pôr do sol mais bonito do Ceará e símbolo da nossa conexão com o mundo.</p>
-            </div>
-        </div>
+<!-- ARQUITETURA -->
+<section class="story-light">
+  <h2>Espaço Arquitetônico</h2>
+  <div class="text-block">
+    Continuidade espacial significa nunca cortar abruptamente.
+    Cada seção emerge da anterior.
+  </div>
+</section>
 
-        <div class="step" data-target="card-3">
-            <div class="step-text">
-                <h2>O Novo</h2>
-                <p>A requalificação da orla traz modernidade sem perder a essência boêmia. Do Dragão do Mar aos novos calçadões, a PI se reafirma como o centro criativo da cidade.</p>
-            </div>
-        </div>
-        
-        <div class="step">
-            </div>
-    </div>
+<!-- FOTOGRAFIA -->
+<section class="story-dark">
+  <h2>Luz e Profundidade</h2>
+  <div class="text-block">
+    Scroll-driven storytelling permite conduzir atenção,
+    ritmo e percepção.
+  </div>
+</section>
 
-</div>
+<!-- ENCERRAMENTO -->
+<section>
+  <h2>Fim é apenas transição</h2>
+  <div class="text-block">
+    Este não é um site. É uma experiência espacial controlada por gesto.
+  </div>
+</section>
+
+<!-- THREE.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 
 <script>
-    /* --- LÓGICA DE INTERSECTION OBSERVER (Troca de Slides) --- */
-    const steps = document.querySelectorAll('.step');
-    const cards = document.querySelectorAll('.card-container');
+/* -----------------------------
+   SCROLL PROGRESS GLOBAL
+------------------------------*/
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const targetId = entry.target.dataset.target;
-                if (!targetId) return;
+const root=document.documentElement
+const maxScroll=document.body.scrollHeight-window.innerHeight
 
-                // Gerencia classes Active/Exit
-                cards.forEach(card => {
-                    if (card.id === targetId) {
-                        card.classList.remove('exit');
-                        card.classList.add('active');
-                    } else {
-                        card.classList.remove('active');
-                        // Se o card já passou, adiciona 'exit' para animar saída
-                        // Simplificação: remove active de todos, lógica fina de exit depende da direção
-                    }
-                });
+window.addEventListener("scroll",()=>{
+  const progress=window.scrollY/maxScroll
+  root.style.setProperty("--progress",progress)
+})
 
-                // Ativa o texto
-                document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-                entry.target.classList.add('active');
-            }
-        });
-    }, { threshold: 0.5 }); // Dispara quando 50% do texto está visível
+/* -----------------------------
+   THREE.JS BACKGROUND SHADER
+------------------------------*/
 
-    steps.forEach(step => observer.observe(step));
+const scene=new THREE.Scene()
+const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,1)
+const renderer=new THREE.WebGLRenderer({
+  canvas:document.getElementById("webgl"),
+  alpha:true
+})
 
+renderer.setSize(window.innerWidth,window.innerHeight)
 
-    /* --- LÓGICA DE TILT 3D (Efeito de Inércia no Scroll) --- */
-    let lastScrollY = window.scrollY;
-    let currentTilt = 0;
+const geometry=new THREE.PlaneGeometry(2,2)
 
-    function animateTilt() {
-        const currentScrollY = window.scrollY;
-        
-        // Calcula a velocidade do scroll (diferença entre pos atual e anterior)
-        const velocity = currentScrollY - lastScrollY;
-        
-        // Suavização (Lerp simples)
-        // Se scrollar rápido para baixo, velocity é positivo -> inclina para frente
-        const targetTilt = Math.min(Math.max(velocity * 0.1, -10), 10); // Limita entre -10 e 10 graus
-        
-        // Aproxima o valor atual do valor alvo (efeito de mola suave)
-        currentTilt += (targetTilt - currentTilt) * 0.1;
+const material=new THREE.ShaderMaterial({
+  uniforms:{
+    u_time:{value:0},
+    u_progress:{value:0}
+  },
+  vertexShader:`
+    varying vec2 vUv;
+    void main(){
+      vUv=uv;
+      gl_Position=vec4(position,1.0);
+    }
+  `,
+  fragmentShader:`
+    uniform float u_time;
+    uniform float u_progress;
+    varying vec2 vUv;
 
-        // Aplica a rotação apenas no card ATIVO
-        const activeCard = document.querySelector('.card-container.active');
-        if (activeCard) {
-            // Mantém o translateZ(0) e adiciona a rotação dinâmica
-            activeCard.style.transform = `translateZ(0) rotateX(${currentTilt}deg)`;
-        }
-
-        lastScrollY = currentScrollY;
-        requestAnimationFrame(animateTilt);
+    float noise(vec2 p){
+      return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);
     }
 
-    animateTilt();
+    void main(){
+      float distortion=sin(vUv.y*10.0 + u_time)*0.02*u_progress;
+      vec2 uv=vUv + vec2(distortion,0.0);
+      float grain=noise(uv*vec2(800.0))*0.15*u_progress;
+      gl_FragColor=vec4(vec3(grain),0.08*u_progress);
+    }
+  `,
+  transparent:true
+})
 
+const mesh=new THREE.Mesh(geometry,material)
+scene.add(mesh)
+
+function animate(){
+  requestAnimationFrame(animate)
+  material.uniforms.u_time.value+=0.03
+  material.uniforms.u_progress.value=window.scrollY/maxScroll
+  renderer.render(scene,camera)
+}
+
+animate()
+
+window.addEventListener("resize",()=>{
+  renderer.setSize(window.innerWidth,window.innerHeight)
+})
 </script>
 
 </body>
